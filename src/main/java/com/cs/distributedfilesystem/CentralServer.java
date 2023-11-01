@@ -38,7 +38,7 @@ public class CentralServer {
         //if get
         getFile(out, in);
         //if post
-//        postFile(out, in);
+        postFile(out, in);
 
 
     }
@@ -82,16 +82,10 @@ public class CentralServer {
         PreparedStatement ps = connection.prepareStatement("INSERT INTO fileLocations VALUES(?, ?, ?)");
         ps.setString(1, fileName);
         ps.setString(2, String.valueOf(locationArr.size()));
-        ps.setString();
-        ResultSet rs = ps.executeQuery();//get the result from the database
+        ps.setString(3, locationStr);
+        ps.executeUpdate();
 
-        System.out.println("database response:" + rs.getString(1));
-
-        if(rs.getString(1) != null)
-            sndMessage = rs.getString(1);
-        else sndMessage = "404";//404 error: file not found
-
-        out.println(sndMessage);
+        out.println("200");//saved file
     }
 
     @GetMapping("/ping")
