@@ -66,12 +66,17 @@ public class Leaf extends DistributedFileSystem {
 
         };
 
-        Thread broadcastThread = new Thread(this.broadcast);
-        broadcastThread.start();
-        Thread centralBroadcastThread = new Thread(this.centralBroadcast);
-        centralBroadcastThread.start();
-        Thread clientThread = new Thread(() -> this.talkToClient());
-        clientThread.start();
+        if (ENV.equals("DEV")) {
+            Thread broadcastThread = new Thread(this.broadcast);
+            broadcastThread.start();
+            Thread centralBroadcastThread = new Thread(this.centralBroadcast);
+            centralBroadcastThread.start();
+            Thread clientThread = new Thread(() -> this.talkToClient());
+            clientThread.start();
+        } else {
+            Thread clientThread = new Thread(() -> this.talkToClient());
+            clientThread.start();
+        }
     }
 
     /**

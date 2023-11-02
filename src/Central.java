@@ -66,12 +66,17 @@ public class Central extends DistributedFileSystem {
 
         };
 
-        Thread broadcastThread = new Thread(this.broadcast);
-        broadcastThread.start();
-        Thread leafBroadcastThread = new Thread(this.leafBroadcast);
-        leafBroadcastThread.start();
-        Thread leafThread = new Thread(() -> this.talkToLeaf());
-        leafThread.start();
+        if (ENV.equals("DEV")) {
+            Thread broadcastThread = new Thread(this.broadcast);
+            broadcastThread.start();
+            Thread leafBroadcastThread = new Thread(this.leafBroadcast);
+            leafBroadcastThread.start();
+            Thread leafThread = new Thread(() -> this.talkToLeaf());
+            leafThread.start();
+        } else {
+            Thread leafThread = new Thread(() -> this.talkToLeaf());
+            leafThread.start();
+        }
     }
 
     /**

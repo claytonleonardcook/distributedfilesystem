@@ -30,10 +30,15 @@ public class Client extends DistributedFileSystem {
             }
         };
 
-        Thread leafBroadcastThread = new Thread(this.leafBroadcast);
-        leafBroadcastThread.start();
-        Thread leafThread = new Thread(() -> this.talkToLeaf());
-        leafThread.start();
+        if (ENV.equals("DEV")) {
+            Thread leafBroadcastThread = new Thread(this.leafBroadcast);
+            leafBroadcastThread.start();
+            Thread leafThread = new Thread(() -> this.talkToLeaf());
+            leafThread.start();
+        } else {
+            Thread leafThread = new Thread(() -> this.talkToLeaf());
+            leafThread.start();
+        }
     }
 
     /**
@@ -50,9 +55,11 @@ public class Client extends DistributedFileSystem {
         String fileName = input.nextLine();
 
         try {
-            synchronized (leafServers) {
-                while (leafServers.isEmpty())
-                    ;
+            if (ENV.equals("DEV")) {
+                synchronized (leafServers) {
+                    while (leafServers.isEmpty())
+                        ;
+                }
             }
 
             int random = new Random().nextInt(leafServers.size());
@@ -94,9 +101,11 @@ public class Client extends DistributedFileSystem {
         String fileContents = input.nextLine();
 
         try {
-            synchronized (leafServers) {
-                while (leafServers.isEmpty())
-                    ;
+            if (ENV.equals("DEV")) {
+                synchronized (leafServers) {
+                    while (leafServers.isEmpty())
+                        ;
+                }
             }
 
             int random = new Random().nextInt(leafServers.size());
@@ -145,7 +154,7 @@ public class Client extends DistributedFileSystem {
         }
     }
 
-    public void main(String[] args) throws Exception {
+    public static void main(String[] args) throws Exception {
         Client client = new Client();
     }
 }

@@ -1,9 +1,7 @@
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
 import java.util.HashMap;
 
 public abstract class DistributedFileSystem {
+    final static String ENV = "PROD";
     final static String OK = "200",
             BADREQUEST = "400",
             NOTFOUND = "404",
