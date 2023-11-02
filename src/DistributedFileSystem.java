@@ -22,8 +22,9 @@ public abstract class DistributedFileSystem {
     public DistributedFileSystem() throws Exception {
         this.port = 3000;
         this.leafServers = new HashMap<String, IPAddress>();
-        this.centralServer = new IPAddress("192.168.1.53", 4000);
-        this.leafServers.put("192.168.66.1", new IPAddress("192.168.66.1", 3000));
+        this.centralServer = new IPAddress("10.23.0.45", 4000);
+        this.leafServers.put("10.23.2.102", new IPAddress("10.23.2.102", 3000));
+        this.leafServers.put("10.23.0.82", new IPAddress("10.23.0.82", 3000));
 
         System.out.println(String.format("Running on %s", InetAddress.getLocalHost()));
     }
