@@ -280,7 +280,7 @@ public class Leaf extends DistributedFileSystem {
 
     private void writeFile(String filePath, String data) throws Exception {
         File file = new File(filePath);
-        file.mkdirs();
+        file.getParentFile().mkdirs();
 
         FileWriter fileWriter = new FileWriter(file);
         PrintWriter printWriter = new PrintWriter(fileWriter);
