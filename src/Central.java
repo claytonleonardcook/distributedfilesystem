@@ -151,6 +151,7 @@ public class Central extends DistributedFileSystem {
     }
 
     private void router(SocketIO inout, String method, String endpoint) {
+        System.out.println(method);
         if (method.contains("GET")) {
             switch (endpoint) {
                 case "/file":
