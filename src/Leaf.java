@@ -190,6 +190,8 @@ public class Leaf extends DistributedFileSystem {
             int numberOfCharacters = data.length();
             int numberOfPairs = (int) Math.floor((double) numberOfCharacters / (double) CHUNK_SIZE) + 1;
 
+            System.out.printf("Breaking \"%s\" up into %d chunk(s)...", data, numberOfPairs);
+
             String hostsAndSegments = "";
 
             for (int i = 0; i < numberOfPairs; i++) {
@@ -211,11 +213,13 @@ public class Leaf extends DistributedFileSystem {
                 for (IPAddress leafIP : leafServers.values()) {
                     try {
                         if (leafIP.address == IP) {
+
                             writeFile(String.format("./segments/%s/%d.txt", name, i), chunk);
                         } else {
                             Socket leaf = new Socket(leafIP.address, leafIP.port);
                             SocketIO leafInout = new SocketIO(leaf);
 
+                            System.out.printf("Sending \"%s\" to %s...", chunk, leafIP.address);
                             String response = sendPostSegment(leafInout, name, i, chunk);
 
                             if (response.equals(INTERNALSERVERERROR)) {
@@ -242,6 +246,9 @@ public class Leaf extends DistributedFileSystem {
 
             Socket central = new Socket(centralServer.address, centralServer.port);
             SocketIO centralInout = new SocketIO(central);
+
+            System.out.println(String.format("Sending locations, \"%s\", to central server @ %s...", hostsAndSegments,
+                    centralServer.address));
 
             if (sendPostLocations(centralInout, hostsAndSegments).equals(INTERNALSERVERERROR)) {
                 centralInout.close();
@@ -284,6 +291,8 @@ public class Leaf extends DistributedFileSystem {
 
         FileWriter fileWriter = new FileWriter(file);
         PrintWriter printWriter = new PrintWriter(fileWriter);
+
+        System.out.printf("Writing \"\" to myself at %s", data, filePath);
 
         printWriter.write(data);
 
