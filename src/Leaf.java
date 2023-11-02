@@ -211,12 +211,12 @@ public class Leaf extends DistributedFileSystem {
                 }
 
                 boolean wasSent = false;
-            
+
                 int random = new Random().nextInt(leafServers.size());
                 Object randomKey = leafServers.keySet().toArray()[random];
                 IPAddress leafIP = leafServers.get(randomKey);
 
-                while(!wasSent) {
+                while (!wasSent) {
                     try {
                         if (leafIP.address.equals(IP)) {
                             writeFile(String.format("./segments/%s/%d.txt", name, i), chunk);
@@ -237,7 +237,7 @@ public class Leaf extends DistributedFileSystem {
                             leaf.close();
                         }
                         wasSent = true;
-                        hostsAndSegments += String.format("%s:%d", leafIP.address, i);
+                        hostsAndSegments += String.format("%s:%d,", leafIP.address, i);
                         break;
                     } catch (Exception e) {
                         System.err.println(e);
@@ -248,6 +248,8 @@ public class Leaf extends DistributedFileSystem {
 
             Socket central = new Socket(centralServer.address, centralServer.port);
             SocketIO centralInout = new SocketIO(central);
+
+            hostsAndSegments = hostsAndSegments.substring(0, hostsAndSegments.length() - 1);
 
             System.out.println(String.format("Sending locations, \"%s\", to central server @ %s...", hostsAndSegments,
                     centralServer.address));
