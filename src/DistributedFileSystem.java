@@ -2,6 +2,8 @@ import java.net.InetAddress;
 import java.util.HashMap;
 
 public abstract class DistributedFileSystem {
+    // 10.23.2.245 Clay Left
+    // 10.23.0.82 Clay Right
     final static String ENV = "PROD";
     final static String OK = "200",
             BADREQUEST = "400",

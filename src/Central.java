@@ -9,7 +9,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
 public class Central extends DistributedFileSystem {
-    // 10.23.2.245 Clay Left
     final static String url = "jdbc:sqlite:fileLocations.db";
 
     private ServerSocket central;
