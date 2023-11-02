@@ -1,3 +1,4 @@
+import java.net.InetAddress;
 import java.util.HashMap;
 
 public abstract class DistributedFileSystem {
@@ -14,11 +15,13 @@ public abstract class DistributedFileSystem {
     protected Runnable broadcast;
     protected int port;
 
-    public DistributedFileSystem() {
+    public DistributedFileSystem() throws Exception {
         this.port = 3000;
         this.leafServers = new HashMap<String, IPAddress>();
         this.centralServer = new IPAddress("192.168.1.53", 4000);
-        this.leafServers.put("192.168.1.53", new IPAddress("192.168.1.53", 3000));
+        this.leafServers.put("192.168.56.1", new IPAddress("192.168.56.1", 3000));
+
+        System.out.println(String.format("Running on %s", InetAddress.getLocalHost()));
     }
 
     public DistributedFileSystem(int port) {
