@@ -17,7 +17,6 @@ public class Leaf extends DistributedFileSystem {
     }
 
     public Leaf(int port) throws Exception {
-        super(port);
         File segmentsFile = new File("./segments");
         segmentsFile.mkdirs();
 
