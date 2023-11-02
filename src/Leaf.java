@@ -254,7 +254,7 @@ public class Leaf extends DistributedFileSystem {
             System.out.println(String.format("Sending locations, \"%s\", to central server @ %s...", hostsAndSegments,
                     centralServer.address));
 
-            if (sendPostLocations(centralInout, hostsAndSegments).equals(INTERNALSERVERERROR)) {
+            if (sendPostLocations(centralInout, name, hostsAndSegments).equals(INTERNALSERVERERROR)) {
                 centralInout.close();
                 central.close();
                 throw new Exception("Central server couldn't store host and segment addresses!");
