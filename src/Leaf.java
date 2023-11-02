@@ -212,7 +212,7 @@ public class Leaf extends DistributedFileSystem {
                 boolean wasSent = false;
                 for (IPAddress leafIP : leafServers.values()) {
                     try {
-                        if (leafIP.address == IP) {
+                        if (leafIP.address.equals(IP)) {
                             writeFile(String.format("./segments/%s/%d.txt", name, i), chunk);
                         } else {
                             Socket leaf = new Socket(leafIP.address, leafIP.port);
