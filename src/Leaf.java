@@ -199,6 +199,7 @@ public class Leaf extends DistributedFileSystem {
                     int currentCharacter = (i * CHUNK_SIZE) + x;
                     chunk += currentCharacter >= data.length() ? ' ' : data.charAt(currentCharacter);
                 }
+
                 if (ENV.equals("DEV")) {
                     synchronized (leafServers) {
                         while (leafServers.isEmpty())
@@ -209,19 +210,23 @@ public class Leaf extends DistributedFileSystem {
                 boolean wasSent = false;
                 for (IPAddress leafIP : leafServers.values()) {
                     try {
-                        Socket leaf = new Socket(leafIP.address, leafIP.port);
-                        SocketIO leafInout = new SocketIO(leaf);
+                        if (leafIP.address == IP) {
+                            writeFile(String.format("./segments/%s/%d.txt", name, i), chunk);
+                        } else {
+                            Socket leaf = new Socket(leafIP.address, leafIP.port);
+                            SocketIO leafInout = new SocketIO(leaf);
 
-                        String response = sendPostSegment(leafInout, name, i, chunk);
+                            String response = sendPostSegment(leafInout, name, i, chunk);
 
-                        if (response.equals(INTERNALSERVERERROR)) {
+                            if (response.equals(INTERNALSERVERERROR)) {
+                                leafInout.close();
+                                leaf.close();
+                                throw new Exception(String.format("Couldn't send to %s!", leafIP.address));
+                            }
+
                             leafInout.close();
                             leaf.close();
-                            throw new Exception(String.format("Couldn't send to %s!", leafIP.address));
                         }
-
-                        leafInout.close();
-                        leaf.close();
                         wasSent = true;
                         hostsAndSegments += String.format("%s:%d", leafIP.address, i);
                         break;
@@ -264,24 +269,26 @@ public class Leaf extends DistributedFileSystem {
             int segment = Integer.parseInt(inout.readLine());
             String data = inout.readLine();
 
-            System.out.println(String.format("POST segment(%s, %d, %s)", name, segment, data));
-
-            File file = new File(String.format("./segments/%s/%d.txt"));
-            file.mkdirs();
-
-            FileWriter fileWriter = new FileWriter(file);
-            PrintWriter printWriter = new PrintWriter(fileWriter);
-
-            printWriter.write(data);
-
-            printWriter.close();
-            fileWriter.close();
+            writeFile(String.format("./segments/%s/%d.txt", name, segment), data);
 
             inout.println(OK);
         } catch (Exception e) {
             System.err.println(e);
             inout.println(INTERNALSERVERERROR);
         }
+    }
+
+    private void writeFile(String filePath, String data) throws Exception {
+        File file = new File(filePath);
+        file.mkdirs();
+
+        FileWriter fileWriter = new FileWriter(file);
+        PrintWriter printWriter = new PrintWriter(fileWriter);
+
+        printWriter.write(data);
+
+        printWriter.close();
+        fileWriter.close();
     }
 
     private void router(SocketIO inout, String method, String endpoint) {

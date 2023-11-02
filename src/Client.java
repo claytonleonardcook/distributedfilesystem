@@ -66,6 +66,8 @@ public class Client extends DistributedFileSystem {
             Object randomKey = leafServers.keySet().toArray()[random];
             IPAddress leaf = leafServers.get(randomKey);
 
+            System.out.println(leaf);
+
             Socket socket = new Socket(leaf.address, leaf.port);
             SocketIO inout = new SocketIO(socket);
 
@@ -112,6 +114,8 @@ public class Client extends DistributedFileSystem {
             Object randomKey = leafServers.keySet().toArray()[random];
             IPAddress leaf = leafServers.get(randomKey);
 
+            System.out.println(leaf);
+
             Socket socket = new Socket(leaf.address, leaf.port);
             SocketIO inout = new SocketIO(socket);
 
@@ -129,12 +133,12 @@ public class Client extends DistributedFileSystem {
     }
 
     public void talkToLeaf() {
+        final int RETREIVEFILE = 1,
+                        SAVEFILE = 2;
+        Scanner input = new Scanner(System.in);
         while (true) {
             try {
-                Scanner input = new Scanner(System.in);
                 System.out.println("Enter 1 to retrieve a file, 2 save to save a new file: ");
-                final int RETREIVEFILE = 1,
-                        SAVEFILE = 2;
                 int action = input.nextInt();
 
                 switch (action) {

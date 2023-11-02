@@ -6,6 +6,7 @@ public abstract class DistributedFileSystem {
     // 10.23.0.82 Clay Right
     //10.23.0.45 Siona Right :)
     // 10.23.2.102 Sioan Left :)
+    final static String IP = "10.23.2.245";
     final static String ENV = "PROD";
     final static String OK = "200",
             BADREQUEST = "400",

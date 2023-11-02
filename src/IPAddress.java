@@ -6,4 +6,8 @@ public class IPAddress {
         this.address = address;
         this.port = port;
     }
+
+    public String toString() {
+        return String.format("%s:%d", this.address, this.port);
+    }
 }
