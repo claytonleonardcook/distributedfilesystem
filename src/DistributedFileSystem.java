@@ -19,7 +19,7 @@ public abstract class DistributedFileSystem {
         this.port = 3000;
         this.leafServers = new HashMap<String, IPAddress>();
         this.centralServer = new IPAddress("192.168.1.53", 4000);
-        this.leafServers.put("192.168.56.1", new IPAddress("192.168.56.1", 3000));
+        this.leafServers.put("192.168.66.1", new IPAddress("192.168.66.1", 3000));
 
         System.out.println(String.format("Running on %s", InetAddress.getLocalHost()));
     }

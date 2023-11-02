@@ -90,9 +90,11 @@ public class Leaf extends DistributedFileSystem {
 
             System.out.println(String.format("GET file(%s)", name));
 
-            synchronized (centralServer) {
-                while (centralServer == null)
-                    ;
+            if (ENV.equals("DEV")) {
+                synchronized (centralServer) {
+                    while (centralServer == null)
+                        ;
+                }
             }
             Socket central = new Socket(centralServer.address, centralServer.port);
             SocketIO centralInout = new SocketIO(central);
@@ -197,10 +199,11 @@ public class Leaf extends DistributedFileSystem {
                     int currentCharacter = (i * CHUNK_SIZE) + x;
                     chunk += currentCharacter >= data.length() ? ' ' : data.charAt(currentCharacter);
                 }
-
-                synchronized (leafServers) {
-                    while (leafServers.isEmpty())
-                        ;
+                if (ENV.equals("DEV")) {
+                    synchronized (leafServers) {
+                        while (leafServers.isEmpty())
+                            ;
+                    }
                 }
 
                 boolean wasSent = false;
