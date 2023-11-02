@@ -6,6 +6,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Random;
 import java.util.Scanner;
 
 public class Leaf extends DistributedFileSystem {
@@ -210,7 +211,12 @@ public class Leaf extends DistributedFileSystem {
                 }
 
                 boolean wasSent = false;
-                for (IPAddress leafIP : leafServers.values()) {
+            
+                int random = new Random().nextInt(leafServers.size());
+                Object randomKey = leafServers.keySet().toArray()[random];
+                IPAddress leafIP = leafServers.get(randomKey);
+
+                while(!wasSent) {
                     try {
                         if (leafIP.address.equals(IP)) {
                             writeFile(String.format("./segments/%s/%d.txt", name, i), chunk);
@@ -238,9 +244,6 @@ public class Leaf extends DistributedFileSystem {
                         System.err.println("Retrying");
                     }
                 }
-
-                if (!wasSent)
-                    throw new Exception("Most to all servers are down! Are any even running?");
             }
 
             Socket central = new Socket(centralServer.address, centralServer.port);
@@ -291,7 +294,7 @@ public class Leaf extends DistributedFileSystem {
         FileWriter fileWriter = new FileWriter(file);
         PrintWriter printWriter = new PrintWriter(fileWriter);
 
-        System.out.printf("Writing \"\" to myself at %s", data, filePath);
+        System.out.printf("Writing \"%s\" to myself at %s\n", data, filePath);
 
         printWriter.write(data);
 
