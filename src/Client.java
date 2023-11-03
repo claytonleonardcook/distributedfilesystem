@@ -66,13 +66,12 @@ public class Client extends DistributedFileSystem {
             Object randomKey = leafServers.keySet().toArray()[random];
             IPAddress leaf = leafServers.get(randomKey);
 
-            System.out.println(leaf);
-
             Socket socket = new Socket(leaf.address, leaf.port);
             SocketIO inout = new SocketIO(socket);
 
-            DistributedFileSystem.sendGetFile(inout, fileName);
-            String serverResponse = inout.readLine();
+            String serverResponse = sendGetFile(inout, fileName);
+
+            // System.out.println(serverResponse);
 
             if (!serverResponse.equals("500") && !serverResponse.equals(NOTFOUND))
                 System.out.println("The file contents are: " + serverResponse);
@@ -134,28 +133,28 @@ public class Client extends DistributedFileSystem {
 
     public void talkToLeaf() {
         final int RETREIVEFILE = 1,
-                        SAVEFILE = 2;
-        Scanner input = new Scanner(System.in);
-        while (true) {
-            try {
-                System.out.println("Enter 1 to retrieve a file, 2 save to save a new file: ");
-                int action = input.nextInt();
+                SAVEFILE = 2;
+        try {
+            Scanner input = new Scanner(System.in);
+            System.out.println("Enter 1 to retrieve a file, 2 save to save a new file: ");
+            int action = input.nextInt();
 
-                switch (action) {
-                    case RETREIVEFILE:
-                        getFile();
-                        break;
-                    case SAVEFILE:
-                        postFile();
-                        break;
-                    default:
-                        System.err.println("Incorrect input! Try again.");
-                        break;
-                }
-            } catch (Exception e) {
-                System.err.println(e);
+            switch (action) {
+                case RETREIVEFILE:
+                    getFile();
+                    break;
+                case SAVEFILE:
+                    postFile();
+                    break;
+                default:
+                    System.err.println("Incorrect input! Try again.");
+                    break;
             }
+            input.close();
+        } catch (Exception e) {
+            System.err.println(e);
         }
+
     }
 
     public static void main(String[] args) throws Exception {
