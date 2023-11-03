@@ -118,8 +118,7 @@ public class Client extends DistributedFileSystem {
             Socket socket = new Socket(leaf.address, leaf.port);
             SocketIO inout = new SocketIO(socket);
 
-            sendPostFile(inout, fileName, fileContents);
-            String serverResponse = inout.readLine();
+            String serverResponse = sendPostFile(inout, fileName, fileContents);
             if (serverResponse.equals("200"))
                 System.out.println("The file " + fileName + " has been successfully saved.");
 
