@@ -5,6 +5,10 @@ import java.util.*;
 public class Client extends DistributedFileSystem {
     private Runnable leafBroadcast;
 
+    /**
+     * Method to communicate with a leaf
+     * @throws Exception
+     */
     public Client() throws Exception {
         this.leafBroadcast = new Runnable() {
             public void run() {
@@ -62,6 +66,7 @@ public class Client extends DistributedFileSystem {
                 }
             }
 
+            //get the IP address from a random leaf
             int random = new Random().nextInt(leafServers.size());
             Object randomKey = leafServers.keySet().toArray()[random];
             IPAddress leaf = leafServers.get(randomKey);
@@ -69,13 +74,11 @@ public class Client extends DistributedFileSystem {
             Socket socket = new Socket(leaf.address, leaf.port);
             SocketIO inout = new SocketIO(socket);
 
-            String serverResponse = sendGetFile(inout, fileName);
+            String serverResponse = sendGetFile(inout, fileName);//server response (file contents)
 
-            // System.out.println(serverResponse);
-
-            if (!serverResponse.equals("500") && !serverResponse.equals(NOTFOUND))
+            if (!serverResponse.equals("500") && !serverResponse.equals(NOTFOUND))//error
                 System.out.println("The file contents are: " + serverResponse);
-            else
+            else//success
                 System.out.println("The file " + fileName + " does not exist");
 
             socket.close();
@@ -119,7 +122,7 @@ public class Client extends DistributedFileSystem {
             SocketIO inout = new SocketIO(socket);
 
             String serverResponse = sendPostFile(inout, fileName, fileContents);
-            if (serverResponse.equals("200"))
+            if (serverResponse.equals("200"))//file successfully saved
                 System.out.println("The file " + fileName + " has been successfully saved.");
 
             socket.close();

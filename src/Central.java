@@ -80,30 +80,28 @@ public class Central extends DistributedFileSystem {
     }
 
     /**
-     * Central Server retrieves file locations from the database and send them to
-     * the leaf server
-     * 
-     * @param out
-     * @param in
+     * Central Server retrieves file locations from the database and send them to the leaf server
+     * @param inout -> Socket the central is using to communicate to a leaf
      */
     public void getFile(SocketIO inout) {
 
         try {
+            //connect to the database
             Connection connection = DriverManager.getConnection("jdbc:sqlite:C:/Users/clcook1/Documents/distributedfilesystem/fileLocations.db");
-            String fileName = inout.readLine();
+            String fileName = inout.readLine();//get the file name from a leaf
+            //get the location string corresponding to the file name from the database
             PreparedStatement ps = connection.prepareStatement("SELECT locations FROM fileLocations WHERE name = ?");
             ps.setString(1, fileName);
             ResultSet rs = ps.executeQuery();// get the result from the database
 
             System.out.println("database response:" + rs.getString(1));
 
-            if (rs.getString(1) == null) {
+            if (rs.getString(1) == null) {//if the file name is not in the database, send an error code
                 inout.println(NOTFOUND);
                 throw new Exception("File not found!");
             }
 
-            // DistributedFileSystem.sendGetLocations(in, out, sndMessage);
-            inout.println(rs.getString(1));
+            inout.println(rs.getString(1));//send the file contents back to the leaf
         } catch (Exception e) {
             System.err.println(e);
         }
@@ -111,38 +109,24 @@ public class Central extends DistributedFileSystem {
     }
 
     /**
-     * Central Server posts a new file to the database, and sends a success code
-     * back to the leaf
-     * 
-     * @param out
-     * @param in
+     * Central Server posts a new file to the database, and sends a success or error code back to the leaf
+     * @param inout -> Socket the central is using to communicate to a leaf
      */
     public void postFile(SocketIO inout) {
 
         try {
-            String fileName = inout.readLine();
-            String fileContents = inout.readLine();
+            String fileName = inout.readLine();//get the file name
+            String fileContents = inout.readLine();//get the file locations string
 
             System.out.println("File name: " + fileName + "/n File Contents: " + fileContents);
-
-            // int fileContentsSize = fileContents.split(",").length;
-
+            //connect to the database
             Connection connection = DriverManager.getConnection("jdbc:sqlite:C:/Users/clcook1/Documents/distributedfilesystem/fileLocations.db");
+            //add the file name and locations to the database
             PreparedStatement ps = connection.prepareStatement("INSERT INTO fileLocations VALUES(?, ?)");
-            // ps.setString(1, "");
             ps.setString(1, fileName);
-            // ps.setString(2, String.valueOf(fileContentsSize));
             ps.setString(2, fileContents);
             ps.executeUpdate();
 
-            // PreparedStatement ps2 = connection.prepareStatement("SELECT locations FROM
-            // fileLocations WHERE name = ?");
-            // ps2.setString(1, fileName);
-            // ResultSet rs = ps2.executeQuery();//get the result from the database
-            //
-            // System.out.println("database added the following locations:" +
-            // rs.getString(1));
-            // DistributedFileSystem.sendPostLocations(in, out, "200");
             inout.println(OK);
         } catch (Exception e) {
             System.err.println(e);
@@ -150,6 +134,12 @@ public class Central extends DistributedFileSystem {
 
     }
 
+    /**
+     *
+     * @param inout
+     * @param method
+     * @param endpoint
+     */
     private void router(SocketIO inout, String method, String endpoint) {
         System.out.println(method);
         if (method.contains("GET")) {
@@ -173,6 +163,9 @@ public class Central extends DistributedFileSystem {
         }
     }
 
+    /**
+     * Method to find a leaf
+     */
     private void talkToLeaf() {
         while (true) {
             try {
