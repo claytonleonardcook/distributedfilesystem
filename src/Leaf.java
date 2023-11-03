@@ -102,6 +102,8 @@ public class Leaf extends DistributedFileSystem {
 
             String allHostsAndSegments = sendGetLocations(centralInout, name);
 
+            System.out.printf("Got \"%s\" from central server!\n", allHostsAndSegments);
+
             if (allHostsAndSegments.equals("500")) {
                 centralInout.close();
                 central.close();
@@ -122,6 +124,8 @@ public class Leaf extends DistributedFileSystem {
                     throw new Exception("Couldn't find leaf!");
                 }
 
+                System.out.printf("Requesting segment, %d, from %s\n", segment, host);
+
                 int port = leafServers.get(host).port;
 
                 Socket leaf = new Socket(host, port);
@@ -136,6 +140,8 @@ public class Leaf extends DistributedFileSystem {
                             String.format("Leaf %s either didn't have or couldn't find segment %d", host, segment));
                 }
 
+                 System.out.printf("Got \"%s\" from %s\n", fileSegment, host);
+
                 file += fileSegment;
 
                 leafInout.close();
@@ -144,6 +150,8 @@ public class Leaf extends DistributedFileSystem {
 
             centralInout.close();
             central.close();
+
+            System.out.printf("Sending \"%s\" back to client!", file);
 
             inout.println(file);
         } catch (Exception e) {
