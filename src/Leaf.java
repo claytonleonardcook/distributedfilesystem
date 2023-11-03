@@ -102,6 +102,8 @@ public class Leaf extends DistributedFileSystem {
 
             String allHostsAndSegments = sendGetLocations(centralInout, name);
 
+            System.out.printf("Got \"%s\" from central server!\n", allHostsAndSegments);
+
             if (allHostsAndSegments.equals("500")) {
                 centralInout.close();
                 central.close();
@@ -122,28 +124,41 @@ public class Leaf extends DistributedFileSystem {
                     throw new Exception("Couldn't find leaf!");
                 }
 
-                int port = leafServers.get(host).port;
+                String fileSegment = "";
 
-                Socket leaf = new Socket(host, port);
-                SocketIO leafInout = new SocketIO(leaf);
+                if (host.equals(IP)) {
+                    fileSegment = readFile(String.format("./segments/%s/%d.txt", name, segment));
+                    System.out.printf("Got \"%s\" from myself\n", fileSegment);
+                } else {
 
-                String fileSegment = sendGetSegment(leafInout, name, segment);
+                    System.out.printf("Requesting segment, %d, from %s\n", segment, host);
 
-                if (fileSegment.equals(INTERNALSERVERERROR)) {
+                    int port = leafServers.get(host).port;
+
+                    Socket leaf = new Socket(host, port);
+                    SocketIO leafInout = new SocketIO(leaf);
+
+                    fileSegment = sendGetSegment(leafInout, name, segment);
+
+                    if (fileSegment.equals(INTERNALSERVERERROR)) {
+                        leafInout.close();
+                        leaf.close();
+                        throw new Exception(
+                                String.format("Leaf %s either didn't have or couldn't find segment %d", host, segment));
+                    }
+
+                    System.out.printf("Got \"%s\" from %s\n", fileSegment, host);
+
                     leafInout.close();
                     leaf.close();
-                    throw new Exception(
-                            String.format("Leaf %s either didn't have or couldn't find segment %d", host, segment));
                 }
-
                 file += fileSegment;
-
-                leafInout.close();
-                leaf.close();
             }
 
             centralInout.close();
             central.close();
+
+            System.out.printf("Sending \"%s\" back to client!\n", file);
 
             inout.println(file);
         } catch (Exception e) {
@@ -165,10 +180,9 @@ public class Leaf extends DistributedFileSystem {
 
             System.out.println(String.format("GET segment(%s, %d)", name, segment));
 
-            File file = new File(String.format("./segments/%s/%d.txt", name, segment));
-            Scanner reader = new Scanner(file);
-            inout.println(reader.nextLine());
-            reader.close();
+            String data = readFile(String.format("./segments/%s/%d.txt", name, segment));
+
+            inout.println(data);
         } catch (Exception e) {
             System.err.println(e);
             inout.println(INTERNALSERVERERROR);
@@ -262,6 +276,8 @@ public class Leaf extends DistributedFileSystem {
 
             centralInout.close();
             central.close();
+
+            inout.println(OK);
         } catch (Exception e) {
             System.err.println(e);
             inout.println(INTERNALSERVERERROR);
@@ -287,6 +303,16 @@ public class Leaf extends DistributedFileSystem {
             System.err.println(e);
             inout.println(INTERNALSERVERERROR);
         }
+    }
+
+    private String readFile(String filePath) throws Exception {
+        File file = new File(filePath);
+        Scanner reader = new Scanner(file);
+
+        String data = reader.nextLine();
+
+        reader.close();
+        return data;
     }
 
     private void writeFile(String filePath, String data) throws Exception {
