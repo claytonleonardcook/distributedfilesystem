@@ -89,7 +89,7 @@ public class Central extends DistributedFileSystem {
     public void getFile(SocketIO inout) {
 
         try {
-            Connection connection = DriverManager.getConnection(url);
+            Connection connection = DriverManager.getConnection("jdbc:sqlite:C:/Users/clcook1/Documents/distributedfilesystem/fileLocations.db");
             String fileName = inout.readLine();
             PreparedStatement ps = connection.prepareStatement("SELECT locations FROM fileLocations WHERE name = ?");
             ps.setString(1, fileName);
@@ -127,7 +127,7 @@ public class Central extends DistributedFileSystem {
 
             // int fileContentsSize = fileContents.split(",").length;
 
-            Connection connection = DriverManager.getConnection(url);
+            Connection connection = DriverManager.getConnection("jdbc:sqlite:C:/Users/clcook1/Documents/distributedfilesystem/fileLocations.db");
             PreparedStatement ps = connection.prepareStatement("INSERT INTO fileLocations VALUES(?, ?)");
             // ps.setString(1, "");
             ps.setString(1, fileName);
@@ -154,7 +154,7 @@ public class Central extends DistributedFileSystem {
         System.out.println(method);
         if (method.contains("GET")) {
             switch (endpoint) {
-                case "/file":
+                case "/locations":
                     this.getFile(inout);
                     break;
                 default:
@@ -162,7 +162,7 @@ public class Central extends DistributedFileSystem {
             }
         } else if (method.contains("POST")) {
             switch (endpoint) {
-                case "/file":
+                case "/locations":
                     this.postFile(inout);
                     break;
                 default:
