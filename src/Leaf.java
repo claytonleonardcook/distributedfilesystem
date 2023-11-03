@@ -158,7 +158,7 @@ public class Leaf extends DistributedFileSystem {
             centralInout.close();
             central.close();
 
-            System.out.printf("Sending \"%s\" back to client!", file);
+            System.out.printf("Sending \"%s\" back to client!\n", file);
 
             inout.println(file);
         } catch (Exception e) {
@@ -276,6 +276,8 @@ public class Leaf extends DistributedFileSystem {
 
             centralInout.close();
             central.close();
+
+            inout.println(OK);
         } catch (Exception e) {
             System.err.println(e);
             inout.println(INTERNALSERVERERROR);
