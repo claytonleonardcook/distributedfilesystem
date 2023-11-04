@@ -5,7 +5,6 @@ import java.util.HashMap;
 * Base class for all other server types to derive from. Stores environmental and global variables that all server types need access to.
 * @author Clayton Cook
 * @author Siona Beaudoin
-* 
 */
 public abstract class DistributedFileSystem {
     /** Current machines IP address */
