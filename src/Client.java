@@ -2,11 +2,19 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 
+/**
+ * Client that contacts leaf servers to either get or save files on the
+ * distributed file system
+ * 
+ * @author Clayton Cook
+ * @author Siona Beaudoin
+ */
 public class Client extends DistributedFileSystem {
     private Runnable leafBroadcast;
 
     /**
      * Method to communicate with a leaf
+     * 
      * @throws Exception
      */
     public Client() throws Exception {
@@ -66,7 +74,7 @@ public class Client extends DistributedFileSystem {
                 }
             }
 
-            //get the IP address from a random leaf
+            // get the IP address from a random leaf
             int random = new Random().nextInt(leafServers.size());
             Object randomKey = leafServers.keySet().toArray()[random];
             IPAddress leaf = leafServers.get(randomKey);
@@ -74,11 +82,11 @@ public class Client extends DistributedFileSystem {
             Socket socket = new Socket(leaf.address, leaf.port);
             SocketIO inout = new SocketIO(socket);
 
-            String serverResponse = sendGetFile(inout, fileName);//server response (file contents)
+            String serverResponse = sendGetFile(inout, fileName);// server response (file contents)
 
-            if (!serverResponse.equals("500") && !serverResponse.equals(NOTFOUND))//error
+            if (!serverResponse.equals("500") && !serverResponse.equals(NOTFOUND))// error
                 System.out.println("The file contents are: " + serverResponse);
-            else//success
+            else// success
                 System.out.println("The file " + fileName + " does not exist");
 
             socket.close();
@@ -122,7 +130,7 @@ public class Client extends DistributedFileSystem {
             SocketIO inout = new SocketIO(socket);
 
             String serverResponse = sendPostFile(inout, fileName, fileContents);
-            if (serverResponse.equals("200"))//file successfully saved
+            if (serverResponse.equals("200"))// file successfully saved
                 System.out.println("The file " + fileName + " has been successfully saved.");
 
             socket.close();

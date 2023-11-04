@@ -8,6 +8,13 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
+/**
+ * Central server that hosts a SQLite server to keep track of which leafs are
+ * hosting which file segments
+ * 
+ * @author Clayton Cook
+ * @author Siona Beaudoin
+ */
 public class Central extends DistributedFileSystem {
     final static String url = "jdbc:sqlite:fileLocations.db";
 
@@ -80,28 +87,31 @@ public class Central extends DistributedFileSystem {
     }
 
     /**
-     * Central Server retrieves file locations from the database and send them to the leaf server
+     * Central Server retrieves file locations from the database and send them to
+     * the leaf server
+     * 
      * @param inout -> Socket the central is using to communicate to a leaf
      */
     public void getFile(SocketIO inout) {
 
         try {
-            //connect to the database
-            Connection connection = DriverManager.getConnection("jdbc:sqlite:C:/Users/clcook1/Documents/distributedfilesystem/fileLocations.db");
-            String fileName = inout.readLine();//get the file name from a leaf
-            //get the location string corresponding to the file name from the database
+            // connect to the database
+            Connection connection = DriverManager
+                    .getConnection("jdbc:sqlite:C:/Users/clcook1/Documents/distributedfilesystem/fileLocations.db");
+            String fileName = inout.readLine();// get the file name from a leaf
+            // get the location string corresponding to the file name from the database
             PreparedStatement ps = connection.prepareStatement("SELECT locations FROM fileLocations WHERE name = ?");
             ps.setString(1, fileName);
             ResultSet rs = ps.executeQuery();// get the result from the database
 
             System.out.println("database response:" + rs.getString(1));
 
-            if (rs.getString(1) == null) {//if the file name is not in the database, send an error code
+            if (rs.getString(1) == null) {// if the file name is not in the database, send an error code
                 inout.println(NOTFOUND);
                 throw new Exception("File not found!");
             }
 
-            inout.println(rs.getString(1));//send the file contents back to the leaf
+            inout.println(rs.getString(1));// send the file contents back to the leaf
         } catch (Exception e) {
             System.err.println(e);
         }
@@ -109,19 +119,22 @@ public class Central extends DistributedFileSystem {
     }
 
     /**
-     * Central Server posts a new file to the database, and sends a success or error code back to the leaf
+     * Central Server posts a new file to the database, and sends a success or error
+     * code back to the leaf
+     * 
      * @param inout -> Socket the central is using to communicate to a leaf
      */
     public void postFile(SocketIO inout) {
 
         try {
-            String fileName = inout.readLine();//get the file name
-            String fileContents = inout.readLine();//get the file locations string
+            String fileName = inout.readLine();// get the file name
+            String fileContents = inout.readLine();// get the file locations string
 
             System.out.println("File name: " + fileName + "/n File Contents: " + fileContents);
-            //connect to the database
-            Connection connection = DriverManager.getConnection("jdbc:sqlite:C:/Users/clcook1/Documents/distributedfilesystem/fileLocations.db");
-            //add the file name and locations to the database
+            // connect to the database
+            Connection connection = DriverManager
+                    .getConnection("jdbc:sqlite:C:/Users/clcook1/Documents/distributedfilesystem/fileLocations.db");
+            // add the file name and locations to the database
             PreparedStatement ps = connection.prepareStatement("INSERT INTO fileLocations VALUES(?, ?)");
             ps.setString(1, fileName);
             ps.setString(2, fileContents);
