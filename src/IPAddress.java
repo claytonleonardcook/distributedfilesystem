@@ -1,8 +1,9 @@
 /**
-* IP & port structure
-* @author Clayton Cook
-* @author Siona Beaudoin
-*/
+ * IP & port structure
+ * 
+ * @author Clayton Cook
+ * @author Siona Beaudoin
+ */
 public class IPAddress {
     /** IP address */
     public String address;
@@ -11,8 +12,9 @@ public class IPAddress {
 
     /**
      * Initialize class attributes
+     * 
      * @param address IP address
-     * @param port Port
+     * @param port    Port
      * @throws Exception
      */
     public IPAddress(String address, int port) {

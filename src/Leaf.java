@@ -9,14 +9,35 @@ import java.net.Socket;
 import java.util.Random;
 import java.util.Scanner;
 
+/**
+ * Leaf server that hosts segments of files and compiles files if contacted by a
+ * client
+ * 
+ * @author Clayton Cook
+ * @author Siona Beaudoin
+ */
 public class Leaf extends DistributedFileSystem {
+    /** Socket that server is hosted on */
     private ServerSocket leaf;
     private Runnable centralBroadcast;
 
+    /**
+     * Initialize class attributes, create required directories, start server on
+     * 3000 and start thread to listen for client
+     * 
+     * @throws Exception
+     */
     public Leaf() throws Exception {
         this(3000);
     }
 
+    /**
+     * Initialize class attributes, create required directories, start server on
+     * {@param port} and start thread to listen for client
+     * 
+     * @param port Port to host leaf on
+     * @throws Exception
+     */
     public Leaf(int port) throws Exception {
         File segmentsFile = new File("./segments");
         segmentsFile.mkdirs();
@@ -80,10 +101,9 @@ public class Leaf extends DistributedFileSystem {
     }
 
     /**
-     * Leaf server receives a GET request for a file.
-     *
-     * @param in  Input from the socket sender
-     * @param out Output to the socket sender
+     * Leaf server receives a GET request for a file
+     * 
+     * @param inout Input & output for socket
      */
     private void getFile(SocketIO inout) {
         try {
@@ -97,6 +117,8 @@ public class Leaf extends DistributedFileSystem {
                         ;
                 }
             }
+
+            // Establish connection with central
             Socket central = new Socket(centralServer.address, centralServer.port);
             SocketIO centralInout = new SocketIO(central);
 
@@ -104,42 +126,53 @@ public class Leaf extends DistributedFileSystem {
 
             System.out.printf("Got \"%s\" from central server!\n", allHostsAndSegments);
 
+            // If the central server returned a interal server error then close the
+            // connection and throw an exception
             if (allHostsAndSegments.equals("500")) {
                 centralInout.close();
                 central.close();
                 throw new Exception("Central server couldn't find segments for file!");
             }
 
+            // Split up all pairs of hosts and segment sequence numbers
             String[] hostsAndSegments = allHostsAndSegments.split(",");
 
+            // String where file segments will be concatenated to and eventually sent to
+            // client
             String file = "";
 
             for (String hostAndSegment : hostsAndSegments) {
                 String host = hostAndSegment.split(":")[0];
                 int segment = Integer.parseInt(hostAndSegment.split(":")[1]);
 
+                // If the host isn't apart of the global leaf server hash map then close
+                // connections and throw exception
                 if (leafServers.get(host) == null) {
                     centralInout.close();
                     central.close();
                     throw new Exception("Couldn't find leaf!");
                 }
 
+                // Segment of file that's retreived by current leaf or another leaf
                 String fileSegment = "";
 
+                // If host is the current machine then get file from directory
                 if (host.equals(IP)) {
                     fileSegment = readFile(String.format("./segments/%s/%d.txt", name, segment));
                     System.out.printf("Got \"%s\" from myself\n", fileSegment);
                 } else {
-
                     System.out.printf("Requesting segment, %d, from %s\n", segment, host);
 
                     int port = leafServers.get(host).port;
 
+                    // Establish connection with leaf with file segment
                     Socket leaf = new Socket(host, port);
                     SocketIO leafInout = new SocketIO(leaf);
 
                     fileSegment = sendGetSegment(leafInout, name, segment);
 
+                    // If the leaf server sent back a internal server error then close connections
+                    // and throw exception
                     if (fileSegment.equals(INTERNALSERVERERROR)) {
                         leafInout.close();
                         leaf.close();
@@ -152,6 +185,7 @@ public class Leaf extends DistributedFileSystem {
                     leafInout.close();
                     leaf.close();
                 }
+                // Append file segment onto end of file string
                 file += fileSegment;
             }
 
@@ -160,6 +194,7 @@ public class Leaf extends DistributedFileSystem {
 
             System.out.printf("Sending \"%s\" back to client!\n", file);
 
+            // Send compiled file back to client
             inout.println(file);
         } catch (Exception e) {
             System.err.println(e);
@@ -168,10 +203,9 @@ public class Leaf extends DistributedFileSystem {
     }
 
     /**
-     * Leaf server receives a GET request for a segment.
-     *
-     * @param in  Input from the socket sender
-     * @param out Output to the socket sender
+     * Leaf server receives a GET request for a segment
+     * 
+     * @param inout Input & output for socket
      */
     private void getSegment(SocketIO inout) {
         try {
@@ -180,8 +214,10 @@ public class Leaf extends DistributedFileSystem {
 
             System.out.println(String.format("GET segment(%s, %d)", name, segment));
 
+            // Get file segment from local storage
             String data = readFile(String.format("./segments/%s/%d.txt", name, segment));
 
+            // Send file segment back to requester
             inout.println(data);
         } catch (Exception e) {
             System.err.println(e);
@@ -190,10 +226,9 @@ public class Leaf extends DistributedFileSystem {
     }
 
     /**
-     * Leaf server receives a POST request for a file.
-     *
-     * @param in  Input from the socket sender
-     * @param out Output to the socket sender
+     * Leaf server receives a POST request for a file
+     * 
+     * @param inout Input & output for socket
      */
     private void postFile(SocketIO inout) {
         try {
@@ -210,10 +245,13 @@ public class Leaf extends DistributedFileSystem {
             String hostsAndSegments = "";
 
             for (int i = 0; i < numberOfPairs; i++) {
+                // String where character will be concatenated to and eventually sent to leaf
                 String chunk = "";
 
                 for (int x = 0; x < CHUNK_SIZE; x++) {
                     int currentCharacter = (i * CHUNK_SIZE) + x;
+                    // Concatenate character onto chunk or add empty space if we ran out of
+                    // characters from file to make sure chunk matches chunk size
                     chunk += currentCharacter >= data.length() ? ' ' : data.charAt(currentCharacter);
                 }
 
@@ -224,23 +262,28 @@ public class Leaf extends DistributedFileSystem {
                     }
                 }
 
-                boolean wasSent = false;
+                while (true) {
+                    // Choose random leaf to send to
+                    int random = new Random().nextInt(leafServers.size());
+                    Object randomKey = leafServers.keySet().toArray()[random];
+                    IPAddress leafIP = leafServers.get(randomKey);
 
-                int random = new Random().nextInt(leafServers.size());
-                Object randomKey = leafServers.keySet().toArray()[random];
-                IPAddress leafIP = leafServers.get(randomKey);
-
-                while (!wasSent) {
                     try {
+                        // If random leaf is the current machine then write file to directory
                         if (leafIP.address.equals(IP)) {
                             writeFile(String.format("./segments/%s/%d.txt", name, i), chunk);
                         } else {
+                            // Open connection with random leaf
                             Socket leaf = new Socket(leafIP.address, leafIP.port);
                             SocketIO leafInout = new SocketIO(leaf);
 
                             System.out.printf("Sending \"%s\" to %s...\n", chunk, leafIP.address);
+
+                            // Send file segment to random leaf
                             String response = sendPostSegment(leafInout, name, i, chunk);
 
+                            // If leaf couldn't store file segment then close connections and throw
+                            // exception, should retry since in while loop
                             if (response.equals(INTERNALSERVERERROR)) {
                                 leafInout.close();
                                 leaf.close();
@@ -250,7 +293,9 @@ public class Leaf extends DistributedFileSystem {
                             leafInout.close();
                             leaf.close();
                         }
-                        wasSent = true;
+
+                        // Concatenate location and segment sequence number to string of pairs to send
+                        // to central server
                         hostsAndSegments += String.format("%s:%d,", leafIP.address, i);
                         break;
                     } catch (Exception e) {
@@ -260,14 +305,18 @@ public class Leaf extends DistributedFileSystem {
                 }
             }
 
+            // Establish connection with central
             Socket central = new Socket(centralServer.address, centralServer.port);
             SocketIO centralInout = new SocketIO(central);
 
+            // Cut off last comma
             hostsAndSegments = hostsAndSegments.substring(0, hostsAndSegments.length() - 1);
 
             System.out.println(String.format("Sending locations, \"%s\", to central server @ %s...", hostsAndSegments,
                     centralServer.address));
 
+            // If central returns a internal servicer error then close all connections and
+            // throw exception
             if (sendPostLocations(centralInout, name, hostsAndSegments).equals(INTERNALSERVERERROR)) {
                 centralInout.close();
                 central.close();
@@ -277,6 +326,8 @@ public class Leaf extends DistributedFileSystem {
             centralInout.close();
             central.close();
 
+            // Send ok status code back to client to let them know that their file was fully
+            // saved
             inout.println(OK);
         } catch (Exception e) {
             System.err.println(e);
@@ -286,9 +337,8 @@ public class Leaf extends DistributedFileSystem {
 
     /**
      * Leaf server receives a POST request for a segment
-     *
-     * @param in  Input from the socket sender
-     * @param out Output to the socket sender
+     * 
+     * @param inout Input & output for socket
      */
     private void postSegment(SocketIO inout) {
         try {
@@ -296,8 +346,10 @@ public class Leaf extends DistributedFileSystem {
             int segment = Integer.parseInt(inout.readLine());
             String data = inout.readLine();
 
+            // Write segment to local storage
             writeFile(String.format("./segments/%s/%d.txt", name, segment), data);
 
+            // Send ok status code back if it was successful
             inout.println(OK);
         } catch (Exception e) {
             System.err.println(e);
@@ -305,6 +357,13 @@ public class Leaf extends DistributedFileSystem {
         }
     }
 
+    /**
+     * Read from file at {@param filePath}
+     * 
+     * @param filePath
+     * @throws Exception
+     * @returns Data from file
+     */
     private String readFile(String filePath) throws Exception {
         File file = new File(filePath);
         Scanner reader = new Scanner(file);
@@ -315,6 +374,13 @@ public class Leaf extends DistributedFileSystem {
         return data;
     }
 
+    /**
+     * Write {@param data} to file at {@param filePath}
+     * 
+     * @param filePath
+     * @param data
+     * @throws Exception
+     */
     private void writeFile(String filePath, String data) throws Exception {
         File file = new File(filePath);
         file.getParentFile().mkdirs();
@@ -330,6 +396,13 @@ public class Leaf extends DistributedFileSystem {
         fileWriter.close();
     }
 
+    /**
+     * Router of all endpoints on server
+     * 
+     * @param inout    Input & output for socket
+     * @param method   GET/POST
+     * @param endpoint Name of endpoint to hit {@code (/endpoint)}
+     */
     private void router(SocketIO inout, String method, String endpoint) {
         if (method.contains("GET")) {
             switch (endpoint) {
@@ -358,6 +431,10 @@ public class Leaf extends DistributedFileSystem {
         }
     }
 
+    /**
+     * Waits for client to ping an endpoint. Once interaction is over it waits for
+     * another client to contact it
+     */
     private void talkToClient() {
         while (true) {
             try {
